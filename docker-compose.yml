@@ -2,19 +2,18 @@ version: '3.8'
 
 services:
 
-  # ─── ElasticSearch ────────────────────────────────────────────
-  # Motor de busca principal: indexa documentos e executa buscas
-  # vetoriais (kNN) e full-text (BM25)
+  # ElasticSearch
+  # Indexa documentos e executa buscas
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
     container_name: elasticsearch
     environment:
-      - discovery.type=single-node        # Modo single-node (desenvolvimento)
-      - xpack.security.enabled=false      # Sem auth (apenas para dev!)
-      - ES_JAVA_OPTS=-Xms1g -Xmx1g       # Limite de memória JVM
+      - discovery.type=single-node        
+      - xpack.security.enabled=false      
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g       
     ports:
-      - "9200:9200"   # API REST
-      - "9300:9300"   # Comunicação entre nós (cluster)
+      - "9200:9200"   
+      - "9300:9300"   
     volumes:
       - elasticsearch_data:/usr/share/elasticsearch/data
     networks:
@@ -25,9 +24,8 @@ services:
       timeout: 10s
       retries: 5
 
-  # ─── Kibana ───────────────────────────────────────────────────
+  # Kibana
   # Interface web para visualizar dados do ElasticSearch
-  # Acesse: http://localhost:5601
   kibana:
     image: docker.elastic.co/kibana/kibana:8.11.0
     container_name: kibana
@@ -41,9 +39,8 @@ services:
     networks:
       - semantic_search_net
 
-  # ─── MongoDB ──────────────────────────────────────────────────
+  # MongoDB
   # Armazena documentos brutos e chunks processados
-  # Schema flexível = ideal para diferentes tipos de arquivo
   mongodb:
     image: mongo:7.0
     container_name: mongodb
@@ -63,9 +60,8 @@ services:
       timeout: 10s
       retries: 5
 
-  # ─── Mongo Express ────────────────────────────────────────────
+  # Mongo Express
   # Interface web para visualizar dados do MongoDB
-  # Acesse: http://localhost:8081
   mongo-express:
     image: mongo-express:1.0.2
     container_name: mongo-express
@@ -82,14 +78,14 @@ services:
     networks:
       - semantic_search_net
 
-# ─── Volumes persistentes ─────────────────────────────────────
+# Volumes persistentes
 volumes:
   elasticsearch_data:
     driver: local
   mongodb_data:
     driver: local
 
-# ─── Rede interna ─────────────────────────────────────────────
+# Rede interna
 networks:
   semantic_search_net:
     driver: bridge
