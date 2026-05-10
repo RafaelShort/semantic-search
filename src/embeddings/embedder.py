@@ -1,15 +1,6 @@
 """
 Embedder — transforma texto em vetores numéricos.
 
-O que é um embedding?
-    Um embedding é uma representação numérica de um texto.
-    Textos com significados similares ficam "próximos" no espaço vetorial.
-
-    Exemplo:
-    "cachorro"  → [0.12, -0.34, 0.87, ...]  (384 números)
-    "cão"       → [0.11, -0.32, 0.85, ...]  (muito próximo!)
-    "automóvel" → [-0.45, 0.23, -0.12, ...] (distante)
-
 Modelo usado: all-MiniLM-L6-v2
     - Rápido e leve
     - 384 dimensões
@@ -27,15 +18,6 @@ from src.config import settings
 class TextEmbedder:
     """
     Gera embeddings de texto usando Sentence Transformers.
-
-    O modelo é carregado uma única vez (lazy loading)
-    e reutilizado para todas as chamadas — evita recarregar
-    o modelo a cada embedding gerado.
-
-    Uso:
-        embedder = TextEmbedder()
-        vector = embedder.embed("texto qualquer")
-        vectors = embedder.embed_batch(["texto 1", "texto 2"])
     """
 
     def __init__(self):
@@ -52,7 +34,7 @@ class TextEmbedder:
         if self._model is not None:
             return
 
-        logger.info(f"🧠 Carregando modelo: '{self._model_name}'")
+        logger.info(f" Carregando modelo: '{self._model_name}'")
         logger.info("   (Primeira execução pode demorar — baixando modelo...)")
 
         self._model = SentenceTransformer(self._model_name)
@@ -136,7 +118,7 @@ class TextEmbedder:
         if not valid_texts:
             return []
 
-        logger.info(f"🧠 Gerando embeddings para {len(valid_texts)} textos...")
+        logger.info(f" Gerando embeddings para {len(valid_texts)} textos...")
 
         vectors = self._model.encode(
             valid_texts,
@@ -146,7 +128,7 @@ class TextEmbedder:
             convert_to_numpy=True
         )
 
-        logger.info(f"✅ {len(vectors)} embeddings gerados")
+        logger.info(f" {len(vectors)} embeddings gerados")
 
         return [v.tolist() for v in vectors]
 
@@ -161,8 +143,5 @@ class TextEmbedder:
             "max_tokens": self._model.max_seq_length,
         }
 
-
-# ─────────────────────────────────────────────────────────────
 # Instância global — Singleton Pattern
-# ─────────────────────────────────────────────────────────────
 embedder = TextEmbedder()
