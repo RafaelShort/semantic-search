@@ -1,15 +1,5 @@
 """
 Loaders de documentos.
-
-Cada loader sabe como extrair texto de um tipo específico de arquivo.
-Todos seguem o mesmo contrato (retornam DocumentData),
-permitindo que o pipeline trate qualquer tipo da mesma forma.
-
-Tipos suportados:
-    .txt  → TextLoader
-    .pdf  → PDFLoader
-    .docx → DocxLoader
-    URL   → URLLoader
 """
 
 import re
@@ -23,10 +13,7 @@ from docx import Document
 from loguru import logger
 from pypdf import PdfReader
 
-
-# ─────────────────────────────────────────────────────────────
 # Estrutura de dados padrão retornada por todos os loaders
-# ─────────────────────────────────────────────────────────────
 
 @dataclass
 class DocumentData:
@@ -36,19 +23,16 @@ class DocumentData:
     Todos os loaders retornam este mesmo formato,
     garantindo que o pipeline funcione de forma uniforme.
     """
-    source: str              # Caminho do arquivo ou URL
-    content: str             # Texto extraído e limpo
-    doc_type: str            # "txt", "pdf", "docx", "url"
+    source: str             
+    content: str             
+    doc_type: str            
     metadata: dict = field(default_factory=dict)
 
     def is_valid(self) -> bool:
         """Verifica se o documento tem conteúdo útil."""
         return bool(self.content and len(self.content.strip()) > 50)
 
-
-# ─────────────────────────────────────────────────────────────
 # Utilitários de limpeza de texto
-# ─────────────────────────────────────────────────────────────
 
 def clean_text(text: str) -> str:
     """
@@ -81,10 +65,7 @@ def clean_text(text: str) -> str:
 
     return text.strip()
 
-
-# ─────────────────────────────────────────────────────────────
 # Loaders
-# ─────────────────────────────────────────────────────────────
 
 class TextLoader:
     """Carrega arquivos .txt"""
@@ -99,7 +80,7 @@ class TextLoader:
 
         logger.info(f"📄 Carregando TXT: {path.name}")
 
-        # Tenta diferentes encodings — comum em arquivos portugueses
+        # Tenta diferentes encodings
         encodings = ["utf-8", "latin-1", "cp1252", "iso-8859-1"]
         content = None
 
@@ -135,7 +116,7 @@ class PDFLoader:
         if not path.exists():
             raise FileNotFoundError(f"Arquivo não encontrado: {file_path}")
 
-        logger.info(f"📕 Carregando PDF: {path.name}")
+        logger.info(f"Carregando PDF: {path.name}")
 
         reader = PdfReader(str(path))
         pages_text = []
@@ -149,12 +130,12 @@ class PDFLoader:
                         f"[Página {page_num + 1}]\n{page_content}"
                     )
             except Exception as exc:
-                logger.warning(f"   ⚠️ Erro na página {page_num + 1}: {exc}")
+                logger.warning(f"   Erro na página {page_num + 1}: {exc}")
                 continue
 
         full_content = "\n\n".join(pages_text)
 
-        # Extrai metadados do PDF (se disponíveis)
+        # Extrai metadados do PDF
         metadata = {
             "filename":   path.name,
             "pages":      len(reader.pages),
@@ -221,7 +202,7 @@ class URLLoader:
         self.timeout = timeout
 
     def load(self, url: str) -> DocumentData:
-        logger.info(f"🌐 Carregando URL: {url}")
+        logger.info(f"Carregando URL: {url}")
 
         headers = {
             "User-Agent": (
@@ -257,7 +238,6 @@ class URLLoader:
             title = soup.title.string.strip()
 
         # Extrai texto principal
-        # Prioriza tags semânticas de conteúdo
         main_content = (
             soup.find("main") or
             soup.find("article") or
@@ -271,7 +251,7 @@ class URLLoader:
         else:
             text = soup.get_text(separator="\n")
 
-        logger.info(f"   ✅ Página carregada | Título: '{title}'")
+        logger.info(f"   Página carregada | Título: '{title}'")
 
         return DocumentData(
             source=url,
@@ -285,10 +265,7 @@ class URLLoader:
             }
         )
 
-
-# ─────────────────────────────────────────────────────────────
 # Factory — escolhe o loader certo automaticamente
-# ─────────────────────────────────────────────────────────────
 
 class DocumentLoader:
     """
@@ -318,11 +295,11 @@ class DocumentLoader:
             DocumentData ou None se falhar
         """
         try:
-            # É uma URL?
+            # Verifica se é URL
             if source.startswith(("http://", "https://")):
                 return self._url_loader.load(source)
 
-            # É um arquivo — escolhe loader pela extensão
+            # Se é um arquivo, escolhe loader pela extensão
             path = Path(source)
             extension = path.suffix.lower()
 
@@ -337,10 +314,10 @@ class DocumentLoader:
                 return None
 
         except FileNotFoundError as exc:
-            logger.error(f"❌ Arquivo não encontrado: {exc}")
+            logger.error(f"Arquivo não encontrado: {exc}")
             return None
         except Exception as exc:
-            logger.error(f"❌ Erro ao carregar '{source}': {exc}")
+            logger.error(f"Erro ao carregar '{source}': {exc}")
             return None
 
     def load_directory(
@@ -354,9 +331,6 @@ class DocumentLoader:
         Args:
             directory:  Caminho da pasta
             recursive:  Se True, busca em subpastas também
-
-        Returns:
-            Lista de DocumentData carregados com sucesso
         """
         dir_path = Path(directory)
         if not dir_path.exists():
@@ -375,7 +349,7 @@ class DocumentLoader:
             if f.is_file() and f.suffix.lower() in extensions
         ]
 
-        logger.info(f"📂 {len(files)} arquivos encontrados em '{dir_path.name}'")
+        logger.info(f"{len(files)} arquivos encontrados em '{dir_path.name}'")
 
         documents = []
         for file in files:
@@ -383,7 +357,7 @@ class DocumentLoader:
             if doc and doc.is_valid():
                 documents.append(doc)
             elif doc:
-                logger.warning(f"⚠️  Documento muito curto, ignorado: {file.name}")
+                logger.warning(f"Documento muito curto, ignorado: {file.name}")
 
-        logger.info(f"✅ {len(documents)}/{len(files)} documentos carregados")
+        logger.info(f"{len(documents)}/{len(files)} documentos carregados")
         return documents
