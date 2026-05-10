@@ -6,14 +6,12 @@ Três modos de busca disponíveis:
 1. SEMÂNTICA (semantic)
    Usa embeddings vetoriais para encontrar documentos
    com significado similar, mesmo sem palavras em comum.
-   Ex: "veículo" encontra "automóvel", "carro", "carro elétrico"
 
 2. PALAVRAS-CHAVE (keyword)
    Busca tradicional BM25 — exata e rápida.
    Melhor para termos técnicos, nomes próprios, siglas.
-   Ex: "Python 3.12" encontra exatamente "Python 3.12"
 
-3. HÍBRIDA (hybrid)  ← Recomendada
+3. HÍBRIDA (hybrid)
    Combina semântica + palavras-chave com pesos configuráveis.
    Aproveita o melhor dos dois mundos.
 """
@@ -25,9 +23,7 @@ from src.embeddings.embedder import embedder
 from src.storage.elastic_client import es_client
 
 
-# ─────────────────────────────────────────────────────────────
 # Estrutura de resultado
-# ─────────────────────────────────────────────────────────────
 
 @dataclass
 class SearchResult:
@@ -52,26 +48,11 @@ class SearchResult:
         }
 
 
-# ─────────────────────────────────────────────────────────────
 # Motor de Busca
-# ─────────────────────────────────────────────────────────────
 
 class SearchEngine:
     """
     Orquestra os três modos de busca.
-
-    Uso:
-        engine = SearchEngine()
-        engine.setup()
-
-        # Busca híbrida (recomendada)
-        results = engine.search("como funciona machine learning")
-
-        # Busca semântica pura
-        results = engine.search("redes neurais", mode="semantic")
-
-        # Busca por palavras-chave
-        results = engine.search("Python BM25", mode="keyword")
     """
 
     def __init__(self):
@@ -102,14 +83,11 @@ class SearchEngine:
             semantic_weight:  Peso da busca semântica (0.0 a 1.0)
             keyword_weight:   Peso da busca por palavras-chave (0.0 a 1.0)
             min_score:        Score mínimo para incluir resultado
-
-        Returns:
-            Lista de SearchResult ordenada por score (maior primeiro)
         """
         if not query or not query.strip():
             raise ValueError("Query não pode estar vazia")
 
-        logger.info(f"🔍 Buscando: '{query}' | Modo: {mode} | Top-K: {top_k}")
+        logger.info(f"Buscando: '{query}' | Modo: {mode} | Top-K: {top_k}")
 
         if mode == "semantic":
             results = self._semantic_search(query, top_k)
@@ -126,21 +104,14 @@ class SearchEngine:
         if min_score > 0:
             results = [r for r in results if r.score >= min_score]
 
-        logger.info(f"✅ {len(results)} resultados encontrados")
+        logger.info(f"{len(results)} resultados encontrados")
         return results
 
-    # ─────────────────────────────────────────────────────────
     # Busca Semântica
-    # ─────────────────────────────────────────────────────────
 
     def _semantic_search(self, query: str, top_k: int) -> list[SearchResult]:
         """
         Busca por similaridade vetorial (kNN).
-
-        Processo:
-        1. Converte a query em embedding
-        2. Busca os k vetores mais próximos no ElasticSearch
-        3. Retorna os chunks correspondentes
         """
         # Converte query em vetor
         query_vector = embedder.embed(query)
@@ -159,16 +130,11 @@ class SearchEngine:
         raw_results = es_client.search(es_query, size=top_k)
         return self._parse_results(raw_results, search_type="semantic")
 
-    # ─────────────────────────────────────────────────────────
     # Busca por Palavras-chave (BM25)
-    # ─────────────────────────────────────────────────────────
 
     def _keyword_search(self, query: str, top_k: int) -> list[SearchResult]:
         """
         Busca tradicional BM25.
-
-        Usa o algoritmo BM25 do ElasticSearch — mesmo algoritmo
-        usado por motores de busca como Google e Bing internamente.
         """
         es_query = {
             "query": {
@@ -176,7 +142,7 @@ class SearchEngine:
                     "query":  query,
                     "fields": ["content^2", "metadata.title"],
                     "type":   "best_fields",
-                    "fuzziness": "AUTO",  # Tolerância a erros de digitação
+                    "fuzziness": "AUTO",  
                 }
             },
             "_source": ["content", "source", "chunk_index", "metadata"],
@@ -185,9 +151,7 @@ class SearchEngine:
         raw_results = es_client.search(es_query, size=top_k)
         return self._parse_results(raw_results, search_type="keyword")
 
-    # ─────────────────────────────────────────────────────────
     # Busca Híbrida
-    # ─────────────────────────────────────────────────────────
 
     def _hybrid_search(
         self,
@@ -198,18 +162,6 @@ class SearchEngine:
     ) -> list[SearchResult]:
         """
         Combina busca semântica + palavras-chave.
-
-        Estratégia de combinação:
-        1. Executa as duas buscas independentemente
-        2. Normaliza os scores de cada uma (0 a 1)
-        3. Combina com pesos: score = sem*0.7 + kw*0.3
-        4. Ordena pelo score combinado
-        5. Remove duplicatas (mesmo chunk pode aparecer nas duas buscas)
-
-        Por que 70% semântico + 30% palavras-chave?
-        - A busca semântica captura o significado
-        - A busca por palavras-chave captura termos exatos
-        - O peso semântico maior prioriza intenção sobre exatidão
         """
         # Executa as duas buscas
         semantic_results = self._semantic_search(query, top_k * 2)
@@ -246,9 +198,7 @@ class SearchEngine:
 
         return sorted_results[:top_k]
 
-    # ─────────────────────────────────────────────────────────
     # Utilitários
-    # ─────────────────────────────────────────────────────────
 
     def _parse_results(
         self,
