@@ -20,7 +20,7 @@ Sistema completo de **busca semântica** que encontra documentos por **significa
 
 > Exemplo: buscar *"como computadores entendem texto"* retorna resultados sobre **Processamento de Linguagem Natural** — mesmo sem nenhuma palavra em comum.
 
-Construído com uma stack moderna de **IA + engenharia de dados**, o projeto cobre todo o pipeline:
+Construído com uma stack de **IA com engenharia de dados**, o projeto cobre o pipeline:
 da ingestão de documentos até a API REST de busca.
 
 ---
