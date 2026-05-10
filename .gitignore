@@ -3,7 +3,7 @@
 venv/
 env/
 
-# Variáveis de ambiente (NUNCA commitar o .env real!)
+# Variáveis de ambiente
 .env
 
 # Python
@@ -34,7 +34,7 @@ data/sample_docs/*.docx
 *.log
 logs/
 
-# Cache do modelo (pesado demais para o Git)
+# Cache do modelo
 .cache/
 models/
 
