@@ -1,19 +1,15 @@
 """
 Schemas Pydantic — define a estrutura de request e response da API.
 
-Por que usar schemas?
-    - Validação automática dos dados de entrada
-    - Documentação automática no Swagger UI
-    - Serialização/desserialização automática
+- Validação automática dos dados de entrada
+- Documentação automática no Swagger UI
+- Serialização/desserialização automática
 """
 
 from pydantic import BaseModel, Field
 from typing import Optional
 
-
-# ─────────────────────────────────────────────────────────────
 # Requests (entrada)
-# ─────────────────────────────────────────────────────────────
 
 class SearchRequest(BaseModel):
     """Schema de requisição de busca."""
@@ -72,10 +68,7 @@ class IngestRequest(BaseModel):
         examples=["https://exemplo.com/artigo"]
     )
 
-
-# ─────────────────────────────────────────────────────────────
 # Responses (saída)
-# ─────────────────────────────────────────────────────────────
 
 class SearchResultItem(BaseModel):
     """Um item de resultado de busca."""
