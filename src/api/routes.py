@@ -30,7 +30,6 @@ from src.storage.elastic_client import es_client
 
 router = APIRouter()
 
-# Instâncias compartilhadas
 search_engine = SearchEngine()
 reranker      = ResultReranker()
 
@@ -38,25 +37,33 @@ reranker      = ResultReranker()
 
 @router.get("/health", response_model=HealthResponse, tags=["Sistema"])
 async def health_check():
-    """
-    Verifica se todos os serviços estão operacionais.
-
-    Retorna o status do MongoDB e ElasticSearch.
-    """
+    """Verifica se todos os serviços estão operacionais."""
     mongo_ok = False
     es_ok    = False
 
-    try:
-        mongo_client.client.admin.command("ping")
-        mongo_ok = True
-    except Exception:
-        pass
+    # MongoDB
+    for _attempt in range(2):
+        try:
+            if _attempt == 0:
+                mongo_client._client.admin.command("ping")
+            else:
+                mongo_client.connect()
+            mongo_ok = True
+            break
+        except Exception:
+            continue
 
-    try:
-        es_client.client.ping()
-        es_ok = True
-    except Exception:
-        pass
+    # ElasticSearch
+    for _attempt in range(2):
+        try:
+            if _attempt == 0:
+                es_ok = bool(es_client.client.ping())
+            else:
+                es_client.connect()
+                es_ok = True
+            break
+        except Exception:
+            continue
 
     status = "healthy" if (mongo_ok and es_ok) else "degraded"
 
@@ -65,6 +72,7 @@ async def health_check():
         mongodb=       mongo_ok,
         elasticsearch= es_ok,
     )
+
 
 # Estatísticas
 
@@ -98,15 +106,6 @@ async def search(request: SearchRequest):
     - `hybrid` *(recomendado)*: Combina semântica + palavras-chave
     - `semantic`: Busca por significado usando embeddings vetoriais
     - `keyword`: Busca tradicional BM25 por palavras exatas
-
-    **Exemplo de uso:**
-    ```json
-    {
-        "query": "como funciona aprendizado de máquina",
-        "mode": "hybrid",
-        "top_k": 5
-    }
-    ```
     """
     start_time = time.time()
 
@@ -117,7 +116,6 @@ async def search(request: SearchRequest):
         )
 
     try:
-        # Executa a busca
         results = search_engine.search(
             query=           request.query,
             mode=            request.mode,
@@ -127,11 +125,9 @@ async def search(request: SearchRequest):
             min_score=       request.min_score,
         )
 
-        # Aplica reranking
         if request.rerank and results:
             results = reranker.rerank(results, query=request.query)
 
-        # Remove duplicatas
         if request.deduplicate and results:
             results = reranker.deduplicate(results)
 
@@ -145,7 +141,7 @@ async def search(request: SearchRequest):
                 SearchResultItem(**r.to_dict())
                 for r in results
             ],
-            time_ms=       elapsed_ms,
+            time_ms= elapsed_ms,
         )
 
     except Exception as exc:
@@ -158,12 +154,6 @@ async def search(request: SearchRequest):
 async def ingest_url(request: IngestRequest):
     """
     Ingere e indexa o conteúdo de uma URL.
-
-    O pipeline completo é executado:
-    1. Baixa e extrai o texto da URL
-    2. Divide em chunks
-    3. Salva no MongoDB
-    4. Gera embeddings e indexa no ElasticSearch
     """
     pipeline = IngestionPipeline()
     indexer  = EmbeddingIndexer()
@@ -178,11 +168,9 @@ async def ingest_url(request: IngestRequest):
                 detail="Não foi possível extrair conteúdo da URL"
             )
 
-        # Gera embeddings dos novos chunks
         indexer.setup()
         indexer.run()
 
-        # Busca contagem de chunks gerados
         chunks_count = mongo_client.chunks.count_documents(
             {"document_id": doc_id}
         )
@@ -190,7 +178,7 @@ async def ingest_url(request: IngestRequest):
         return IngestResponse(
             success=      True,
             document_id=  doc_id,
-            message=      f"URL ingerida com sucesso",
+            message=      "URL ingerida com sucesso",
             chunks_count= chunks_count,
         )
 
@@ -210,10 +198,11 @@ async def ingest_file(file: Annotated[UploadFile, File()]):
 
     Formatos suportados: .txt, .pdf, .docx, .md
     """
-    import tempfile, shutil
+    import tempfile
+    import shutil
 
     allowed_extensions = {".txt", ".pdf", ".docx", ".doc", ".md"}
-    file_extension = Path(file.filename).suffix.lower()
+    file_extension     = Path(file.filename).suffix.lower()
 
     if file_extension not in allowed_extensions:
         raise HTTPException(
@@ -224,9 +213,9 @@ async def ingest_file(file: Annotated[UploadFile, File()]):
 
     pipeline = IngestionPipeline()
     indexer  = EmbeddingIndexer()
+    tmp_path = None
 
     try:
-        # Salva arquivo temporariamente
         with tempfile.NamedTemporaryFile(
             suffix=file_extension,
             delete=False
@@ -264,4 +253,5 @@ async def ingest_file(file: Annotated[UploadFile, File()]):
         raise HTTPException(status_code=500, detail=str(exc))
     finally:
         pipeline.teardown()
-        Path(tmp_path).unlink(missing_ok=True)
+        if tmp_path:
+            Path(tmp_path).unlink(missing_ok=True)
