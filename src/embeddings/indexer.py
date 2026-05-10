@@ -2,17 +2,7 @@
 Indexer — busca chunks pendentes no MongoDB,
 gera embeddings e indexa no ElasticSearch.
 
-Fluxo:
-    MongoDB (chunks sem embedding)
-         │
-         ▼
-    TextEmbedder (gera vetores)
-         │
-         ▼
-    ElasticSearch (indexa chunk + vetor)
-         │
-         ▼
-    MongoDB (marca chunks como indexados ✅)
+Fluxo: MongoDB (chunks sem embedding), TextEmbedder (gera vetores), ElasticSearch (indexa chunk + vetor), MongoDB (marca chunks como indexados)
 """
 
 from loguru import logger
@@ -31,12 +21,6 @@ class EmbeddingIndexer:
     - Memória RAM (não carrega tudo de uma vez)
     - Velocidade (batch embedding é mais rápido)
     - Resiliência (falha em um lote não afeta os outros)
-
-    Uso:
-        indexer = EmbeddingIndexer()
-        indexer.setup()
-        stats = indexer.run()
-        indexer.teardown()
     """
 
     def __init__(self, batch_size: int = 32):
@@ -54,27 +38,16 @@ class EmbeddingIndexer:
         mongo_client.create_indexes()
         es_client.connect()
         es_client.create_index()
-        logger.info("🚀 Indexer inicializado")
+        logger.info("Indexer inicializado")
 
     def teardown(self) -> None:
         """Fecha conexões."""
         mongo_client.disconnect()
-        logger.info("👋 Indexer encerrado")
+        logger.info("Indexer encerrado")
 
     def run(self) -> dict:
         """
         Executa o pipeline completo de embedding + indexação.
-
-        Fluxo por lote:
-        1. Busca chunks pendentes no MongoDB
-        2. Extrai os textos
-        3. Gera embeddings em lote
-        4. Monta documentos para o ElasticSearch
-        5. Envia para o ElasticSearch (Bulk API)
-        6. Marca chunks como indexados no MongoDB
-
-        Returns:
-            Estatísticas da execução
         """
         stats = {
             "total_processed": 0,
@@ -89,10 +62,10 @@ class EmbeddingIndexer:
         )
 
         if pending_count == 0:
-            logger.info("ℹ️  Nenhum chunk pendente para indexar")
+            logger.info("Nenhum chunk pendente para indexar")
             return stats
 
-        logger.info(f"📋 {pending_count} chunks pendentes para indexar")
+        logger.info(f"{pending_count} chunks pendentes para indexar")
 
         # Barra de progresso geral
         with tqdm(
@@ -121,7 +94,7 @@ class EmbeddingIndexer:
                 progress_bar.update(len(batch))
 
         logger.info(
-            f"✅ Indexação concluída | "
+            f"Indexação concluída | "
             f"Indexados: {stats['total_indexed']} | "
             f"Falhas: {stats['total_failed']} | "
             f"Lotes: {stats['batches']}"
@@ -132,12 +105,6 @@ class EmbeddingIndexer:
     def _process_batch(self, chunks: list[dict]) -> tuple[int, int]:
         """
         Processa um lote de chunks.
-
-        Args:
-            chunks: Lista de dicts vindos do MongoDB
-
-        Returns:
-            Tuple (sucessos, falhas)
         """
         try:
             # 1. Extrai textos do lote
@@ -152,7 +119,7 @@ class EmbeddingIndexer:
 
             if len(vectors) != len(chunks):
                 logger.error(
-                    f"❌ Mismatch: {len(chunks)} chunks, "
+                    f"Mismatch: {len(chunks)} chunks, "
                     f"{len(vectors)} embeddings"
                 )
                 return 0, len(chunks)
@@ -171,7 +138,7 @@ class EmbeddingIndexer:
                 }
                 es_documents.append(es_doc)
 
-            # 4. Envia para o ElasticSearch (Bulk API)
+            # 4. Envia para o ElasticSearch
             success_count, error_count = es_client.bulk_index(es_documents)
 
             # 5. Marca chunks como indexados no MongoDB
@@ -182,5 +149,5 @@ class EmbeddingIndexer:
             return success_count, error_count
 
         except Exception as exc:
-            logger.error(f"❌ Erro no lote: {exc}")
+            logger.error(f"Erro no lote: {exc}")
             return 0, len(chunks)
