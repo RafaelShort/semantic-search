@@ -54,18 +54,18 @@ def main(directory, file, url, stats):
     try:
         pipeline.setup()
 
-        # ── Mostrar estatísticas ───────────────────────────
+        # Mostrar estatísticas
         if stats:
             _show_stats()
             return
 
-        # ── Ingerir diretório ──────────────────────────────
+        # Diretório
         if directory:
             console.print(f"📂 Ingerindo diretório: [cyan]{directory}[/cyan]\n")
             result = pipeline.ingest_directory(directory)
             _show_ingestion_result(result)
 
-        # ── Ingerir arquivo ───────────────────────────────
+        # Arquivo
         elif file:
             console.print(f"📄 Ingerindo arquivo: [cyan]{file}[/cyan]\n")
             doc_id = pipeline.ingest_file(file)
@@ -74,7 +74,7 @@ def main(directory, file, url, stats):
             else:
                 console.print("❌ Falha ao ingerir arquivo", style="red")
 
-        # ── Ingerir URL ───────────────────────────────────
+        # URL
         elif url:
             console.print(f"🌐 Ingerindo URL: [cyan]{url}[/cyan]\n")
             doc_id = pipeline.ingest_url(url)
@@ -83,7 +83,7 @@ def main(directory, file, url, stats):
             else:
                 console.print("❌ Falha ao ingerir URL", style="red")
 
-        # ── Nenhuma opção passada ──────────────────────────
+        # Nenhuma opção
         else:
             console.print(
                 "[yellow]ℹ️  Nenhuma fonte especificada.\n\n"
