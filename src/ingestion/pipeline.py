@@ -1,20 +1,7 @@
 """
 Pipeline de ingestão de documentos.
 
-Fluxo completo:
-    [Arquivo/URL]
-         │
-         ▼
-    [DocumentLoader]  → extrai texto
-         │
-         ▼
-    [TextChunker]     → divide em chunks
-         │
-         ▼
-    [MongoDB]         → salva documento + chunks
-         │
-         ▼
-    [Pronto para Etapa 3: Embeddings]
+Fluxo completo: extrai texto, divide em chunks, salva documento + chunks
 """
 
 from pathlib import Path
@@ -31,21 +18,6 @@ from src.storage.mongo_client import mongo_client
 class IngestionPipeline:
     """
     Orquestra o fluxo completo de ingestão.
-
-    Uso:
-        pipeline = IngestionPipeline()
-        pipeline.setup()
-
-        # Ingerir um arquivo
-        pipeline.ingest_file("documento.pdf")
-
-        # Ingerir uma URL
-        pipeline.ingest_url("https://exemplo.com")
-
-        # Ingerir uma pasta inteira
-        pipeline.ingest_directory("data/sample_docs")
-
-        pipeline.teardown()
     """
 
     def __init__(self):
@@ -56,16 +28,14 @@ class IngestionPipeline:
         """Inicializa conexões com banco de dados."""
         mongo_client.connect()
         mongo_client.create_indexes()
-        logger.info("🚀 Pipeline de ingestão inicializado")
+        logger.info("Pipeline de ingestão inicializado")
 
     def teardown(self) -> None:
         """Fecha conexões."""
         mongo_client.disconnect()
-        logger.info("👋 Pipeline encerrado")
+        logger.info("Pipeline encerrado")
 
-    # ─────────────────────────────────────────────────────────
     # Métodos públicos de ingestão
-    # ─────────────────────────────────────────────────────────
 
     def ingest_file(self, file_path: str) -> Optional[str]:
         """
@@ -85,11 +55,8 @@ class IngestionPipeline:
     def ingest_url(self, url: str) -> Optional[str]:
         """
         Ingere uma página web.
-
-        Returns:
-            document_id se bem-sucedido, None se falhar
         """
-        logger.info(f"📥 Ingerindo URL: {url}")
+        logger.info(f"Ingerindo URL: {url}")
         doc = self.loader.load(url)
 
         if not doc:
@@ -104,15 +71,12 @@ class IngestionPipeline:
     ) -> dict:
         """
         Ingere todos os documentos de uma pasta.
-
-        Returns:
-            Dict com estatísticas da ingestão
         """
-        logger.info(f"📂 Ingerindo diretório: {directory}")
+        logger.info(f"Ingerindo diretório: {directory}")
         documents = self.loader.load_directory(directory, recursive)
 
         if not documents:
-            logger.warning("⚠️  Nenhum documento encontrado na pasta")
+            logger.warning("Nenhum documento encontrado na pasta")
             return {"total": 0, "success": 0, "failed": 0, "skipped": 0}
 
         stats = {"total": len(documents), "success": 0, "failed": 0, "skipped": 0}
@@ -126,11 +90,11 @@ class IngestionPipeline:
                 else:
                     stats["skipped"] += 1
             except Exception as exc:
-                logger.error(f"❌ Erro ao processar '{doc.source}': {exc}")
+                logger.error(f"Erro ao processar '{doc.source}': {exc}")
                 stats["failed"] += 1
 
         logger.info(
-            f"✅ Ingestão concluída | "
+            f"Ingestão concluída | "
             f"Sucesso: {stats['success']} | "
             f"Ignorados: {stats['skipped']} | "
             f"Falhas: {stats['failed']}"
@@ -138,9 +102,7 @@ class IngestionPipeline:
 
         return stats
 
-    # ─────────────────────────────────────────────────────────
     # Processamento interno
-    # ─────────────────────────────────────────────────────────
 
     def _process_document(self, doc: DocumentData) -> Optional[str]:
         """
@@ -148,16 +110,12 @@ class IngestionPipeline:
         1. Salva o documento bruto no MongoDB
         2. Gera os chunks
         3. Salva os chunks no MongoDB
-
-        Returns:
-            document_id ou None se documento já existe
         """
         if not doc.is_valid():
-            logger.warning(f"⚠️  Documento inválido ou vazio: {doc.source}")
+            logger.warning(f"Documento inválido ou vazio: {doc.source}")
             return None
 
         # 1. Salva documento bruto no MongoDB
-        # (a deduplicação por hash acontece aqui automaticamente)
         document_id = mongo_client.save_document(
             source=doc.source,
             content=doc.content,
@@ -168,7 +126,7 @@ class IngestionPipeline:
         chunks = self.chunker.chunk_document(doc, document_id)
 
         if not chunks:
-            logger.warning(f"⚠️  Nenhum chunk gerado para: {doc.source}")
+            logger.warning(f"Nenhum chunk gerado para: {doc.source}")
             return document_id
 
         # 3. Salva chunks no MongoDB
@@ -184,7 +142,7 @@ class IngestionPipeline:
         # Mostra estatísticas dos chunks
         stats = self.chunker.get_stats(chunks)
         logger.info(
-            f"   📊 Chunks: {stats['total_chunks']} | "
+            f"   Chunks: {stats['total_chunks']} | "
             f"Tamanho médio: {stats['avg_size_chars']} chars"
         )
 
