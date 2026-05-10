@@ -15,7 +15,7 @@ import sys
 from pathlib import Path
 from time import time
 
-# Garante que o diretório raiz está no Python path
+# Garante que o diretório raiz está no path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from rich.console import Console
@@ -85,7 +85,7 @@ def check_elasticsearch() -> tuple[bool, str, float]:
 
 
 def main():
-    # ─── Header ───────────────────────────────────────────────
+    # Header
     console.print()
     console.print(Panel.fit(
         "[bold blue]🔍 Motor de Busca Semântico[/bold blue]\n"
@@ -95,7 +95,7 @@ def main():
     ))
     console.print()
 
-    # ─── Executar verificações ────────────────────────────────
+    # Executar verificações
     checks = [
         ("🍃  MongoDB",        check_mongodb),
         ("🔍  ElasticSearch",  check_elasticsearch),
@@ -113,7 +113,7 @@ def main():
             progress.remove_task(task)
             results.append((name, success, message, elapsed))
 
-    # ─── Tabela de resultados ─────────────────────────────────
+    # Tabela de resultados
     table = Table(
         show_header=True,
         header_style="bold cyan",
@@ -136,7 +136,7 @@ def main():
     console.print(table)
     console.print()
 
-    # ─── Resultado final ──────────────────────────────────────
+    # Resultado final
     if all_ok:
         console.print(Panel(
             "[bold green]✅ Infraestrutura 100% operacional![/bold green]\n\n"
