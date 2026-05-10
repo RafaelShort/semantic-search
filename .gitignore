@@ -37,3 +37,6 @@ logs/
 # Cache do modelo (pesado demais para o Git)
 .cache/
 models/
+
+# Streamlit
+.streamlit/
