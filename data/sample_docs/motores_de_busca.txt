@@ -1,0 +1,45 @@
+Como Funcionam os Motores de Busca
+
+Os motores de busca são sistemas sofisticados que indexam e recuperam
+informações da web de forma eficiente. Entender seu funcionamento é
+essencial para qualquer desenvolvedor de sistemas de informação.
+
+Crawling: A Coleta de Dados
+
+O processo começa com os crawlers, também chamados de spiders ou bots.
+Esses programas navegam pela web seguindo links de página em página,
+coletando o conteúdo de cada URL visitada.
+
+O crawler respeita regras definidas no arquivo robots.txt de cada site,
+que indica quais páginas podem ou não ser indexadas.
+
+Indexação
+
+Após a coleta, o conteúdo é processado e armazenado em um índice invertido.
+Este índice mapeia cada palavra para os documentos onde ela aparece,
+permitindo buscas rápidas e eficientes.
+
+O índice invertido é a estrutura de dados fundamental de qualquer
+motor de busca. Para a palavra "Python", por exemplo, o índice
+armazena todos os documentos que contêm essa palavra.
+
+Ranking de Resultados
+
+Quando um usuário faz uma busca, o motor precisa ordenar os resultados
+por relevância. Os algoritmos mais conhecidos são:
+
+TF-IDF: Mede a frequência de um termo em um documento em relação
+à sua frequência em todos os documentos.
+
+BM25: Uma evolução do TF-IDF que considera o comprimento dos documentos
+e é amplamente usado em sistemas modernos como o ElasticSearch.
+
+Busca Semântica
+
+A busca semântica vai além das palavras-chave, entendendo o significado
+da consulta do usuário. Utiliza embeddings vetoriais para representar
+documentos e consultas em um espaço multidimensional.
+
+A similaridade entre vetores é calculada pela distância cosseno,
+permitindo encontrar documentos semanticamente similares mesmo que
+não compartilhem as mesmas palavras exatas.

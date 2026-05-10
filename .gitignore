@@ -1,0 +1,39 @@
+# Ambiente virtual
+.venv/
+venv/
+env/
+
+# Variáveis de ambiente (NUNCA commitar o .env real!)
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Dados locais
+data/sample_docs/*.pdf
+data/sample_docs/*.docx
+
+# Logs
+*.log
+logs/
+
+# Cache do modelo (pesado demais para o Git)
+.cache/
+models/

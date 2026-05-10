@@ -1,0 +1,37 @@
+Inteligência Artificial: Uma Introdução
+
+A Inteligência Artificial (IA) é um campo da ciência da computação dedicado
+ao desenvolvimento de sistemas capazes de realizar tarefas que normalmente
+exigiriam inteligência humana.
+
+Historia da Inteligência Artificial
+
+O termo "Inteligência Artificial" foi cunhado por John McCarthy em 1956,
+durante a famosa Conferência de Dartmouth. Desde então, a área passou por
+diversas fases de entusiasmo e períodos de menor investimento.
+
+Nas décadas de 1950 e 1960, pesquisadores acreditavam que sistemas
+inteligentes poderiam ser criados em poucos anos. Essa fase inicial foi
+marcada por grande otimismo e produziu os primeiros programas de IA.
+
+Aprendizado de Máquina
+
+O Aprendizado de Máquina (Machine Learning) é um subcampo da IA que permite
+que sistemas aprendam a partir de dados sem serem explicitamente programados.
+Os principais tipos são:
+
+Aprendizado Supervisionado: O modelo aprende com exemplos rotulados.
+Aprendizado Não Supervisionado: O modelo encontra padrões em dados não rotulados.
+Aprendizado por Reforço: O modelo aprende através de recompensas e punições.
+
+Redes Neurais e Deep Learning
+
+As redes neurais artificiais são inspiradas no funcionamento do cérebro humano.
+O Deep Learning utiliza redes neurais com muitas camadas para aprender
+representações complexas dos dados.
+
+Processamento de Linguagem Natural
+
+O Processamento de Linguagem Natural (PLN) é uma área da IA focada na
+interação entre computadores e a linguagem humana. Aplicações incluem
+tradução automática, análise de sentimentos e chatbots.
