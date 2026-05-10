@@ -1,17 +1,10 @@
 """
-Chunker — divide documentos em pedaços menores.
+Chunker divide documentos em pedaços menores.
 
-Por que fazer chunking?
-    Modelos de embedding têm limite de tokens (~512 tokens).
-    Documentos grandes precisam ser divididos para serem processados.
-    Chunks menores = embeddings mais precisos e relevantes.
-
-Estratégia usada: Sliding Window com respeito a parágrafos
-    ┌──────────────────────────────────────┐
-    │  Chunk 1: [0   ─────────── 500]      │
-    │  Chunk 2:       [450 ────────── 950] │ ← overlap de 50 chars
-    │  Chunk 3:             [900 ─── 1400] │
-    └──────────────────────────────────────┘
+Modelos de embedding têm limite de tokens (~512 tokens).
+Documentos grandes precisam ser divididos para serem processados.
+Chunks menores promovem embeddings mais precisos e relevantes.
+Sliding Window com respeito a parágrafos
 """
 
 from dataclasses import dataclass, field
@@ -25,16 +18,11 @@ from src.ingestion.loaders import DocumentData
 class Chunk:
     """
     Representa um pedaço de texto de um documento.
-
-    Cada chunk é uma unidade independente que será:
-    1. Salva no MongoDB
-    2. Transformada em embedding
-    3. Indexada no ElasticSearch
     """
     content:     str          # Texto do chunk
     document_id: str          # ID do documento no MongoDB
-    chunk_index: int          # Posição do chunk no documento (0, 1, 2...)
-    source:      str          # Origem (arquivo ou URL)
+    chunk_index: int          # Posição do chunk no documento
+    source:      str          # Origem
     metadata:    dict = field(default_factory=dict)
 
     def __len__(self) -> int:
@@ -53,7 +41,7 @@ class Chunk:
 
 class TextChunker:
     """
-    Divide texto em chunks com sobreposição (overlap).
+    Divide texto em chunks com sobreposição.
 
     Args:
         chunk_size:    Tamanho máximo de cada chunk em caracteres
@@ -90,16 +78,12 @@ class TextChunker:
         Args:
             document:    Documento carregado pelo loader
             document_id: ID do documento no MongoDB
-
-        Returns:
-            Lista de Chunks prontos para indexação
         """
         if not document.content or not document.content.strip():
-            logger.warning(f"⚠️  Documento vazio: {document.source}")
+            logger.warning(f"Documento vazio: {document.source}")
             return []
 
         # Divide o texto em parágrafos primeiro
-        # (respeita a estrutura natural do documento)
         paragraphs = self._split_into_paragraphs(document.content)
 
         # Agrupa parágrafos em chunks do tamanho configurado
@@ -124,7 +108,7 @@ class TextChunker:
             chunks.append(chunk)
 
         logger.info(
-            f"✂️  Chunking concluído | "
+            f"Chunking concluído | "
             f"{len(chunks)} chunks | "
             f"Origem: '{document.source.split('/')[-1]}'"
         )
@@ -134,11 +118,10 @@ class TextChunker:
     def _split_into_paragraphs(self, text: str) -> list[str]:
         """
         Divide o texto em parágrafos.
-
         Parágrafos são separados por linha em branco.
         Parágrafos muito longos são quebrados em sentenças.
         """
-        # Divide por linhas em branco (padrão de parágrafo)
+        # Divide por linhas em branco
         raw_paragraphs = [
             p.strip()
             for p in text.split("\n\n")
@@ -148,10 +131,10 @@ class TextChunker:
         paragraphs = []
         for para in raw_paragraphs:
             if len(para) <= self.chunk_size:
-                # Parágrafo cabe em um chunk — mantém inteiro
+                # Parágrafo cabe em um chunk
                 paragraphs.append(para)
             else:
-                # Parágrafo muito longo — quebra por sentenças
+                # Parágrafo muito longo
                 sentences = self._split_into_sentences(para)
                 paragraphs.extend(sentences)
 
@@ -176,7 +159,7 @@ class TextChunker:
             else:
                 if current:
                     result.append(current)
-                # Sentença maior que chunk_size — corta por palavras
+                # Sentença maior que chunk_size
                 if len(sentence) > self.chunk_size:
                     result.extend(self._split_by_words(sentence))
                 else:
@@ -215,8 +198,6 @@ class TextChunker:
     ) -> list[str]:
         """
         Agrupa parágrafos em chunks com overlap.
-
-        Sliding window:
         - Avança pelo texto adicionando parágrafos
         - Quando atinge chunk_size, salva e recua chunk_overlap chars
         - Garante que nenhum contexto importante seja perdido nas bordas
@@ -226,16 +207,16 @@ class TextChunker:
 
         chunks     = []
         current    = ""
-        overlap_buffer = ""  # Guarda texto para overlap
+        overlap_buffer = "" 
 
         for para in paragraphs:
             candidate = (current + "\n\n" + para).strip() if current else para
 
             if len(candidate) <= self.chunk_size:
-                # Ainda cabe — adiciona ao chunk atual
+                # Se couber, adiciona ao chunk atual
                 current = candidate
             else:
-                # Não cabe — salva chunk atual e inicia novo com overlap
+                # Se não couber, salva chunk atual e inicia novo com overlap
                 if current:
                     chunks.append(current)
 
@@ -249,7 +230,7 @@ class TextChunker:
                     # Parágrafo isolado maior que chunk_size
                     current = para
 
-        # Adiciona o último chunk (se não estiver vazio)
+        # Adiciona o último chunk
         if current:
             chunks.append(current)
 
