@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🔍 Motor de Busca Semântico
+# Motor de Busca Semântico
 
 ### Busca inteligente por significado, não apenas palavras-chave
 
@@ -14,18 +14,18 @@
 
 ---
 
-## 📌 Sobre o Projeto
+## Sobre o Projeto
 
 Sistema completo de **busca semântica** que encontra documentos por **significado**, não apenas por palavras exatas.
 
-> 💡 Exemplo: buscar *"como computadores entendem texto"* retorna resultados sobre **Processamento de Linguagem Natural** — mesmo sem nenhuma palavra em comum.
+> Exemplo: buscar *"como computadores entendem texto"* retorna resultados sobre **Processamento de Linguagem Natural** — mesmo sem nenhuma palavra em comum.
 
 Construído com uma stack moderna de **IA + engenharia de dados**, o projeto cobre todo o pipeline:
 da ingestão de documentos até a API REST de busca.
 
 ---
 
-## ✨ Funcionalidades
+## Funcionalidades
 
 | Funcionalidade | Descrição |
 |---|---|
@@ -43,7 +43,7 @@ da ingestão de documentos até a API REST de busca.
 
 ---
 
-## 🚀 Como Executar
+## Como Executar
 
 ### Pré-requisitos
 
@@ -56,11 +56,11 @@ da ingestão de documentos até a API REST de busca.
 ```bash
 git clone https://github.com/seu-usuario/semantic-search.git
 cd semantic-search
-
-
+```
 
 ### 2. Clonar o repositório
 
+```bash
 # Criar ambiente virtual
 python -m venv .venv
 
@@ -72,45 +72,52 @@ source .venv/bin/activate
 
 # Instalar dependências
 pip install -r requirements.txt
-
+```
 
 ### 3. Configurar variáveis de ambiente
 
+```bash
 cp .env.example .env
-
+```
 
 ### 4. Subir a infraestrutura
 
+```bash
 docker compose up -d
 
 python scripts/verify_setup.py
+```
 
 ### 5. Ingerir documentos de exemplo
 
+```bash
 python scripts/ingest_documents.py --directory data/sample_docs
+```
 
 ### 6. Gerar embeddings e indexar
 
+```bash
 python scripts/run_embeddings.py
+```
 
 ### 7. Iniciar a API
 
+```bash
 uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000
+```
 
+### 8. Acessar
+- Interface	URL
+- Swagger UI	http://localhost:8000/docs
+- ReDoc	http://localhost:8000/redoc
+- Kibana	http://localhost:5601
+- Mongo Express	http://localhost:8081
 
-8. Acessar
-Interface	URL
-Swagger UI	http://localhost:8000/docs
-ReDoc	http://localhost:8000/redoc
-Kibana	http://localhost:5601
-Mongo Express	http://localhost:8081
+## Endpoints da API
 
+### POST /api/v1/search
 
-🔌 Endpoints da API
-
-POST /api/v1/search
-
-
+```json
 {
   "query": "como funciona aprendizado de máquina",
   "mode": "hybrid",
@@ -120,9 +127,10 @@ POST /api/v1/search
   "rerank": true,
   "deduplicate": true
 }
+```
 
 Resposta:
-
+```json
 {
   "query": "como funciona aprendizado de máquina",
   "mode": "hybrid",
@@ -139,25 +147,30 @@ Resposta:
     }
   ]
 }
+```
 
 
-POST /api/v1/ingest/url
+### POST /api/v1/ingest/url
 
+```json
 {
   "url": "https://pt.wikipedia.org/wiki/Inteligência_artificial"
 }
+```
 
-GET /api/v1/health
+### GET /api/v1/health
 
+```json
 {
   "status": "healthy",
   "mongodb": true,
   "elasticsearch": true,
   "version": "1.0.0"
 }
+```
 
-🧪 Testes via Terminal
-
+## Testes via Terminal
+```bash
 # Busca híbrida
 python scripts/search_test.py --query "redes neurais"
 
@@ -169,13 +182,13 @@ python scripts/search_test.py --query "BM25 TF-IDF" --mode keyword
 
 # Modo interativo
 python scripts/search_test.py --interactive
+```
 
-
-📊 Conceitos Aplicados
-Embeddings Vetoriais — representação semântica de textos em espaço de alta dimensão
-Busca kNN Aproximada — algoritmo HNSW do ElasticSearch para busca vetorial eficiente
-BM25 — algoritmo probabilístico de ranking usado pelos maiores motores de busca
-Sliding Window Chunking — divisão de texto com sobreposição para preservar contexto
-Busca Híbrida com RRF — fusão de rankings semântico e léxico
-Padrão Repository — abstração das camadas de storage (MongoDB, ElasticSearch)
-Pipeline Pattern — fluxo de ingestão em etapas desacopladas
+## Conceitos Aplicados
+- Embeddings Vetoriais — representação semântica de textos em espaço de alta dimensão
+- Busca kNN Aproximada — algoritmo HNSW do ElasticSearch para busca vetorial eficiente
+- BM25 — algoritmo probabilístico de ranking usado pelos maiores motores de busca
+- Sliding Window Chunking — divisão de texto com sobreposição para preservar contexto
+- Busca Híbrida com RRF — fusão de rankings semântico e léxico
+- Padrão Repository — abstração das camadas de storage (MongoDB, ElasticSearch)
+- Pipeline Pattern — fluxo de ingestão em etapas desacopladas
