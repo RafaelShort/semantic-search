@@ -39,21 +39,21 @@ def main(batch_size, recreate_index, model_info):
 
     console.print()
     console.print(Panel.fit(
-        "[bold blue]🧠 Pipeline de Embeddings[/bold blue]\n"
+        "[bold blue] Pipeline de Embeddings[/bold blue]\n"
         "[dim]Motor de Busca Semântico — Etapa 3[/dim]",
         border_style="blue",
         padding=(1, 4)
     ))
     console.print()
 
-    # ── Info do modelo ─────────────────────────────────────
+    # Informação do modelo
     if model_info:
         console.print("🔍 Carregando informações do modelo...\n")
         info = embedder.get_model_info()
         _show_model_info(info)
         return
 
-    # ── Recriar índice ─────────────────────────────────────
+    # Recriar índice
     if recreate_index:
         console.print(
             "[bold red]⚠️  Atenção![/bold red] "
@@ -78,7 +78,7 @@ def main(batch_size, recreate_index, model_info):
         console.print("✅ Índice recriado! Rode sem --recreate-index para indexar.\n")
         return
 
-    # ── Executar indexação ─────────────────────────────────
+    # Executar indexação
     indexer = EmbeddingIndexer(batch_size=batch_size)
 
     try:
