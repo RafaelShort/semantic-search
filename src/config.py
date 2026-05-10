@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     debug: bool = False
 
     # MongoDB
-    mongodb_uri: str = "mongodb://admin:password123@localhost:27017"
+    mongodb_uri: str = "mongodb://localhost:27017"
     mongodb_db_name: str = "semantic_search"
 
     # ElasticSearch
