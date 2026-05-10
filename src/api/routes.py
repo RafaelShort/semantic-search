@@ -30,14 +30,11 @@ from src.storage.elastic_client import es_client
 
 router = APIRouter()
 
-# Instâncias compartilhadas (inicializadas no startup da app)
+# Instâncias compartilhadas
 search_engine = SearchEngine()
 reranker      = ResultReranker()
 
-
-# ─────────────────────────────────────────────────────────────
 # Health Check
-# ─────────────────────────────────────────────────────────────
 
 @router.get("/health", response_model=HealthResponse, tags=["Sistema"])
 async def health_check():
@@ -69,10 +66,7 @@ async def health_check():
         elasticsearch= es_ok,
     )
 
-
-# ─────────────────────────────────────────────────────────────
 # Estatísticas
-# ─────────────────────────────────────────────────────────────
 
 @router.get("/stats", response_model=StatsResponse, tags=["Sistema"])
 async def get_stats():
@@ -93,10 +87,7 @@ async def get_stats():
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
 
-
-# ─────────────────────────────────────────────────────────────
 # Busca
-# ─────────────────────────────────────────────────────────────
 
 @router.post("/search", response_model=SearchResponse, tags=["Busca"])
 async def search(request: SearchRequest):
@@ -136,11 +127,11 @@ async def search(request: SearchRequest):
             min_score=       request.min_score,
         )
 
-        # Aplica reranking (opcional)
+        # Aplica reranking
         if request.rerank and results:
             results = reranker.rerank(results, query=request.query)
 
-        # Remove duplicatas (opcional)
+        # Remove duplicatas
         if request.deduplicate and results:
             results = reranker.deduplicate(results)
 
@@ -161,10 +152,7 @@ async def search(request: SearchRequest):
         logger.error(f"❌ Erro na busca: {exc}")
         raise HTTPException(status_code=500, detail=str(exc))
 
-
-# ─────────────────────────────────────────────────────────────
 # Ingestão
-# ─────────────────────────────────────────────────────────────
 
 @router.post("/ingest/url", response_model=IngestResponse, tags=["Ingestão"])
 async def ingest_url(request: IngestRequest):
