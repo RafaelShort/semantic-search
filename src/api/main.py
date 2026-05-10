@@ -1,5 +1,5 @@
 """
-Aplicação FastAPI principal.
+Aplicação FastAPI.
 
 Inicializa a API com:
 - Conexões com banco de dados
@@ -18,10 +18,7 @@ from src.api.routes import router, search_engine
 from src.storage.mongo_client import mongo_client
 from src.storage.elastic_client import es_client
 
-
-# ─────────────────────────────────────────────────────────────
-# Lifecycle — startup e shutdown da aplicação
-# ─────────────────────────────────────────────────────────────
+# Startup e shutdown da aplicação
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -31,34 +28,31 @@ async def lifespan(app: FastAPI):
     STARTUP:  inicializa conexões
     SHUTDOWN: fecha conexões graciosamente
     """
-    # ── STARTUP ──────────────────────────────────────────────
-    logger.info("🚀 Iniciando Motor de Busca Semântico...")
+    # STARTUP
+    logger.info("Iniciando Motor de Busca Semântico...")
 
     mongo_client.connect()
     mongo_client.create_indexes()
-    logger.info("✅ MongoDB conectado")
+    logger.info("MongoDB conectado")
 
     es_client.connect()
     es_client.create_index()
-    logger.info("✅ ElasticSearch conectado")
+    logger.info("ElasticSearch conectado")
 
     search_engine.setup()
-    logger.info("✅ Motor de busca pronto")
+    logger.info("Motor de busca pronto")
 
-    logger.info("🎉 API iniciada com sucesso!")
-    logger.info("📖 Documentação: http://localhost:8000/docs")
+    logger.info("API iniciada com sucesso!")
+    logger.info("Documentação: http://localhost:8000/docs")
 
-    yield  # API fica ativa aqui
+    yield 
 
-    # ── SHUTDOWN ──────────────────────────────────────────────
-    logger.info("👋 Encerrando API...")
+    # SHUTDOWN
+    logger.info("Encerrando API...")
     mongo_client.disconnect()
-    logger.info("✅ Conexões encerradas")
+    logger.info("Conexões encerradas")
 
-
-# ─────────────────────────────────────────────────────────────
 # App
-# ─────────────────────────────────────────────────────────────
 
 app = FastAPI(
     title="🔍 Motor de Busca Semântico",
@@ -84,20 +78,16 @@ API REST para busca semântica em documentos.
     redoc_url="/redoc",     # ReDoc
 )
 
-# ─────────────────────────────────────────────────────────────
 # Middleware
-# ─────────────────────────────────────────────────────────────
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],   # Em produção, especifique os domínios permitidos
+    allow_origins=["*"],   
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# ─────────────────────────────────────────────────────────────
 # Rotas
-# ─────────────────────────────────────────────────────────────
 
 app.include_router(router, prefix="/api/v1")
 
