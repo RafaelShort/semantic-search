@@ -1,7 +1,5 @@
 """
-Reranker — reordena resultados por relevância contextual.
-
-Por que reranking?
+Reranker reordena resultados por relevância contextual.
     A busca inicial retorna candidatos por similaridade.
     O reranker refina a ordem levando em conta:
     - Diversidade (evita chunks muito similares entre si)
@@ -16,10 +14,6 @@ from src.search.engine import SearchResult
 class ResultReranker:
     """
     Reordena e filtra resultados de busca.
-
-    Uso:
-        reranker = ResultReranker()
-        refined = reranker.rerank(results, query="machine learning")
     """
 
     def rerank(
@@ -35,9 +29,6 @@ class ResultReranker:
             results:           Lista de SearchResult a reordenar
             query:             Query original (para análise)
             diversity_penalty: Penalidade para chunks do mesmo documento
-
-        Returns:
-            Lista reordenada
         """
         if not results:
             return results
@@ -48,7 +39,7 @@ class ResultReranker:
         # Reordena por score final
         results.sort(key=lambda r: r.score, reverse=True)
 
-        logger.debug(f"🔀 Reranking aplicado em {len(results)} resultados")
+        logger.debug(f"Reranking aplicado em {len(results)} resultados")
         return results
 
     def _apply_diversity_penalty(
@@ -58,9 +49,6 @@ class ResultReranker:
     ) -> list[SearchResult]:
         """
         Penaliza chunks do mesmo documento que já apareceram.
-
-        Se dois chunks vêm do mesmo arquivo, o segundo recebe
-        uma penalidade para incentivar diversidade de fontes.
         """
         seen_sources: dict[str, int] = {}
 
@@ -90,9 +78,6 @@ class ResultReranker:
         Args:
             results:   Lista de resultados
             threshold: Similaridade mínima para considerar duplicata
-
-        Returns:
-            Lista sem duplicatas
         """
         unique = []
 
@@ -112,7 +97,7 @@ class ResultReranker:
 
         if len(unique) < len(results):
             logger.debug(
-                f"🗑️  Deduplicação: {len(results)} → {len(unique)} resultados"
+                f"Deduplicação: {len(results)} → {len(unique)} resultados"
             )
 
         return unique
